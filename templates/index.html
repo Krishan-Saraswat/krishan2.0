@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance & Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{ url_for('static', filename='finance.js') }}"></script>
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Left Column: Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📋 My Tasks</h2>
+            </div>
+            <div class="task-input-box">
+                <input type="text" id="taskInput" placeholder="Add new task..." />
+                <button onclick="addTask()">+</button>
+            </div>
+            <div class="tasks-container">
+                <div class="task-section">
+                    <h3>Pending</h3>
+                    <div id="pendingTasks" class="task-list"></div>
+                </div>
+                <div class="task-section">
+                    <h3>Completed</h3>
+                    <div id="completedTasks" class="task-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Main Content Area -->
+            <div class="content-area" id="contentArea">
+                <!-- Header: Thought of the Day -->
+                <div class="header-bar">
+                    <div class="header-content">
+                        <div class="header-title" id="headerTitle">{{ thought }}</div>
+                        <div class="header-controls">
+                            <button class="header-btn add-thought-btn" onclick="showInput()">✏️ Edit</button>
+                            <button class="header-btn remove-btn" onclick="removeThought()">🗑️ Remove</button>
+                            <button class="calendar-btn" onclick="toggleCalendarPanel()">📅</button>
+                        </div>
+                    </div>
+                    <span id="inputBox" style="display:none;" class="thought-input-box">
+                        <input type="text" id="thoughtInput" placeholder="Enter your thought..." />
+                        <button onclick="addThought()" class="save-btn">Save</button>
+                    </span>
+                </div>
+
+                <!-- Finance Boxes -->
+                <div class="finance-container">
+                    <!-- Box 1: Daily Expense -->
+                    <div class="finance-box">
+                        <div class="box-header"><h3>💰 Daily Expense</h3></div>
+                        <div class="input-row">
+                            <input type="text" id="dailyExpenseTitle" placeholder="Expense title" />
+                            <input type="number" id="dailyExpenseAmount" placeholder="Amount" />
+                            <button onclick="addDailyExpense()" class="add-btn">Add</button>
+                        </div>
+                        <div id="dailyExpenseList" class="expense-list"></div>
+                    </div>
+
+                    <!-- Box 2: Credit Card Expense -->
+                    <div class="finance-box">
+                        <div class="box-header"><h3>💳 Card Expense</h3></div>
+                        <div class="input-row">
+                            <input type="text" id="ccExpenseType" placeholder="Type" />
+                            <input type="number" id="ccExpenseAmount" placeholder="Amount" />
+                            <select id="ccCardType" class="select-input">
+                                <option value="">Card</option>
+                                <option value="HDFC">HDFC</option>
+                                <option value="ICICI">ICICI</option>
+                                <option value="SBI">SBI</option>
+                                <option value="AXIS">AXIS</option>
+                                <option value="YES">YES</option>
+                            </select>
+                            <button onclick="addCCExpense()" class="add-btn">Add</button>
+                        </div>
+                        <div id="ccExpenseList" class="expense-list"></div>
+                    </div>
+
+                    <!-- Box 3: Loans -->
+                    <div class="finance-box">
+                        <div class="box-header"><h3>🏦 Loans</h3></div>
+                        <div class="input-row">
+                            <input type="text" id="loanName" placeholder="Loan name" />
+                            <input type="number" id="loanRemaining" placeholder="Remaining" />
+                            <input type="number" id="loanEMI" placeholder="EMI" />
+                            <button onclick="showLoanForm()" class="add-btn">Add</button>
+                        </div>
+                        <div id="loanFormExtra" style="display:none;" class="input-row">
+                            <input type="number" id="loanLastRemaining" placeholder="Last Month Remaining" />
+                            <input type="number" id="loanLastEMI" placeholder="Last Month EMI" />
+                            <button onclick="addLoan()" class="save-btn">Save</button>
+                            <button onclick="hideLoanForm()" class="cancel-btn">Cancel</button>
+                        </div>
+                        <div id="loanList" class="expense-list"></div>
+                    </div>
+
+                    <!-- Box 4: Recurring EMI -->
+                    <div class="finance-box">
+                        <div class="box-header"><h3>📊 Recurring EMI</h3></div>
+                        <div class="input-row">
+                            <input type="text" id="emiName" placeholder="EMI name" />
+                            <input type="number" id="emiAmount" placeholder="Amount" />
+                            <input type="date" id="emiStartDate" />
+                            <input type="date" id="emiEndDate" />
+                            <button onclick="addEMI()" class="add-btn">Add</button>
+                        </div>
+                        <div id="emiList" class="expense-list"></div>
+                    </div>
+
+                    <!-- Box 5: Total Corpus - CIRCULAR -->
+                    <div class="corpus-circle-container">
+                        <div class="corpus-circle">
+                            <div class="corpus-inner">
+                                <div class="corpus-label">Total Corpus</div>
+                                <div class="corpus-value" id="totalCorpusValue">₹0</div>
+                                <div class="corpus-breakdown">
+                                    <div class="corpus-item">
+                                        <span class="label">MF:</span>
+                                        <span class="value" id="totalMutualFunds">₹0</span>
+                                    </div>
+                                    <div class="corpus-item">
+                                        <span class="label">Stocks:</span>
+                                        <span class="value" id="totalStocks">₹0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Box 6: Mutual Fund -->
+                    <div class="finance-box investment-box">
+                        <div class="box-header"><h3>📈 Mutual Fund</h3></div>
+                        <div class="investment-total">
+                            <strong>Total: <span id="mfTotal">₹0</span></strong>
+                        </div>
+                        <div class="input-row">
+                            <input type="text" id="fundName" placeholder="Fund name" />
+                            <input type="number" id="fundAmount" placeholder="Amount" />
+                            <button onclick="addMutualFund()" class="add-btn">Update</button>
+                        </div>
+                        <div id="mutualFundList" class="investment-list">
+                            <div class="investment-item header">
+                                <span class="fund-num">Item</span>
+                                <span class="fund-name">Fund Name</span>
+                                <span class="fund-amount">Amount</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Box 7: Stocks Holding -->
+                    <div class="finance-box investment-box">
+                        <div class="box-header"><h3>📊 Stocks Holding</h3></div>
+                        <div class="investment-total">
+                            <strong>Total: <span id="stockTotal">₹0</span></strong>
+                        </div>
+                        <div class="input-row">
+                            <input type="text" id="stockName" placeholder="Stock name" />
+                            <input type="number" id="stockQuantity" placeholder="Quantity" />
+                            <input type="number" id="stockPrice" placeholder="Current Price" />
+                            <button onclick="addStock()" class="add-btn">Update</button>
+                        </div>
+                        <div id="stocksList" class="investment-list">
+                            <div class="investment-item header">
+                                <span class="stock-num">Item</span>
+                                <span class="stock-name">Stock Name</span>
+                                <span class="stock-value">Value</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Box 8: Stocks Purchased & Sold -->
+                    <div class="finance-box investment-box">
+                        <div class="box-header"><h3>🔄 Stocks Purchased & Sold</h3></div>
+                        <div class="input-row">
+                            <input type="text" id="txnStockName" placeholder="Stock name" />
+                            <input type="number" id="txnPurchasePrice" placeholder="Purchase" />
+                            <input type="number" id="txnSoldPrice" placeholder="Sold" />
+                            <button onclick="addStockTransaction()" class="add-btn">Add</button>
+                        </div>
+                        <div id="stockTransactionList" class="investment-list">
+                            <div class="investment-item header">
+                                <span class="txn-name">Stock Name</span>
+                                <span class="txn-purchase">Purchase</span>
+                                <span class="txn-sold">Sold</span>
+                                <span class="txn-gain">Gain/Loss</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Panel -->
+            <div class="calendar-panel" id="calendarPanel">
+                <div class="calendar-panel-header">
+                    <h2>📊 Financial Report</h2>
+                    <button class="close-panel-btn" onclick="toggleCalendarPanel()">×</button>
+                </div>
+                <div class="date-picker-section">
+                    <div class="date-input">
+                        <label>Start Date</label>
+                        <input type="date" id="startDate" />
+                    </div>
+                    <div class="date-input">
+                        <label>End Date</label>
+                        <input type="date" id="endDate" />
+                    </div>
+                    <button onclick="generateReport()" class="generate-btn">Generate</button>
+                </div>
+                <div class="report-box">
+                    <div class="report-title"><h3>💰 Daily Expenses</h3></div>
+                    <div id="dailyExpenseReport" class="report-content"></div>
+                    <div class="report-total">
+                        <span>Total:</span>
+                        <strong id="dailyTotal">₹0</strong>
+                    </div>
+                </div>
+                <div class="report-box">
+                    <div class="report-title"><h3>💳 Card Expenses</h3></div>
+                    <div id="ccExpenseReport" class="report-content"></div>
+                    <div class="report-total">
+                        <span>Total:</span>
+                        <strong id="ccTotal">₹0</strong>
+                    </div>
+                </div>
+                <div class="report-box">
+                    <div class="report-title"><h3>🏦 Loans</h3></div>
+                    <div id="loanReport" class="report-content"></div>
+                </div>
+                <div class="report-box">
+                    <div class="report-title"><h3>📊 Recurring EMIs</h3></div>
+                    <div id="emiReport" class="report-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let startDate = "{{ start_date }}";
+        let endDate = "{{ end_date }}";
+
+        function showInput() { document.getElementById("inputBox").style.display = "flex"; document.getElementById("thoughtInput").focus(); }
+        function addThought() {
+            let text = document.getElementById("thoughtInput").value;
+            if (text.trim() === "") return;
+            fetch("/add", { method: "POST", headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text})})
+            .then(resp => resp.json()).then(data => {
+                if (data.success) {
+                    document.getElementById("headerTitle").innerText = text;
+                    document.getElementById("inputBox").style.display = "none";
+                    document.getElementById("thoughtInput").value = "";
+                }
+            });
+        }
+
+        function removeThought() {
+            fetch("/remove", { method: "POST" }).then(resp => resp.json()).then(data => {
+                if (data.success) { document.getElementById("headerTitle").innerText = "Thought of the Day"; }
+            });
+        }
+
+        function toggleCalendarPanel() {
+            const panel = document.getElementById("calendarPanel");
+            if (panel.classList.contains("active")) {
+                panel.classList.remove("active");
+            } else {
+                panel.classList.add("active");
+                generateReport();
+            }
+        }
+
+        function showLoanForm() { document.getElementById("loanFormExtra").style.display = "flex"; }
+        function hideLoanForm() { document.getElementById("loanFormExtra").style.display = "none"; }
+
+        function addTask() {
+            let text = document.getElementById("taskInput").value;
+            if (text.trim() === "") return;
+            fetch("/add-task", { method: "POST", headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text: text})})
+            .then(resp => resp.json()).then(data => {
+                if (data.success) {
+                    document.getElementById("taskInput").value = "";
+                    loadTasks();
+                }
+            });
+        }
+
+        function toggleTask(taskId) {
+            fetch(`/toggle-task/${taskId}`, { method: "POST", headers: {'Content-Type': 'application/json'}})
+            .then(resp => resp.json()).then(data => { if (data.success) loadTasks(); });
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/delete-task/${taskId}`, { method: "POST", headers: {'Content-Type': 'application/json'}})
+            .then(resp => resp.json()).then(data => { if (data.success) loadTasks(); });
+        }
+
+        function loadTasks() {
+            fetch("/get-tasks").then(resp => resp.json()).then(data => {
+                let pendingHTML = '', completedHTML = '';
+                data.pending.forEach(task => {
+                    pendingHTML += `<div class="task-item"><input type="checkbox" onchange="toggleTask(${task.id})" /><span>${task.text}</span><button class="task-delete-btn" onclick="deleteTask(${task.id})">×</button></div>`;
+                });
+                data.completed.forEach(task => {
+                    completedHTML += `<div class="task-item completed"><input type="checkbox" checked onchange="toggleTask(${task.id})" /><span>${task.text}</span><button class="task-delete-btn" onclick="deleteTask(${task.id})">×</button></div>`;
+                });
+                document.getElementById("pendingTasks").innerHTML = pendingHTML || '<p class="no-tasks">No pending tasks</p>';
+                document.getElementById("completedTasks").innerHTML = completedHTML || '<p class="no-tasks">No completed tasks</p>';
+            });
+        }
+
+        function generateReport() {
+            const startDate = document.getElementById("startDate").value;
+            const endDate = document.getElementById("endDate").value;
+            if (!startDate || !endDate) { alert("Please select both dates"); return; }
+
+            fetch(`/get-daily-expenses?start_date=${startDate}&end_date=${endDate}`).then(resp => resp.json()).then(data => {
+                let html = '<table class="report-table"><tr><th>Date</th><th>Title</th><th>Amount</th></tr>';
+                let total = 0;
+                data.forEach(exp => { html += `<tr><td>${exp.date}</td><td>${exp.title}</td><td>₹${exp.amount.toFixed(2)}</td></tr>`; total += exp.amount; });
+                html += '</table>';
+                document.getElementById("dailyExpenseReport").innerHTML = html;
+                document.getElementById("dailyTotal").innerText = `₹${total.toFixed(2)}`;
+            });
+
+            fetch(`/get-cc-expenses?start_date=${startDate}&end_date=${endDate}`).then(resp => resp.json()).then(data => {
+                let html = '<table class="report-table"><tr><th>Date</th><th>Type</th><th>Card</th><th>Amount</th></tr>';
+                let total = 0;
+                data.forEach(exp => { html += `<tr><td>${exp.date}</td><td>${exp.type}</td><td><span class="card-badge">${exp.card}</span></td><td>₹${exp.amount.toFixed(2)}</td></tr>`; total += exp.amount; });
+                html += '</table>';
+                document.getElementById("ccExpenseReport").innerHTML = html;
+                document.getElementById("ccTotal").innerText = `₹${total.toFixed(2)}`;
+            });
+
+            fetch('/get-loans').then(resp => resp.json()).then(data => {
+                let html = '<table class="report-table"><tr><th>Loan</th><th>Remaining</th><th>EMI</th><th>L.M.R</th><th>L.M.E</th></tr>';
+                data.forEach(loan => { html += `<tr><td>${loan.name}</td><td>₹${loan.remaining.toFixed(2)}</td><td>₹${loan.emi.toFixed(2)}</td><td>₹${loan.last_remaining.toFixed(2)}</td><td>₹${loan.last_emi.toFixed(2)}</td></tr>`; });
+                html += '</table>';
+                document.getElementById("loanReport").innerHTML = html;
+            });
+
+            fetch('/get-emis').then(resp => resp.json()).then(data => {
+                let html = '<table class="report-table"><tr><th>EMI Name</th><th>Amount</th><th>Start</th><th>End</th></tr>';
+                data.forEach(emi => { html += `<tr><td>${emi.name}</td><td>₹${emi.amount.toFixed(2)}</td><td>${emi.start_date}</td><td>${emi.end_date || 'Ongoing'}</td></tr>`; });
+                html += '</table>';
+                document.getElementById("emiReport").innerHTML = html;
+            });
+        }
+
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        document.getElementById("startDate").valueAsDate = thirtyDaysAgo;
+        document.getElementById("endDate").valueAsDate = today;
+
+        window.addEventListener('load', () => {
+            loadTasks();
+            loadDailyExpenses();
+            loadCCExpenses();
+            loadLoans();
+            loadEMIs();
+            loadMutualFunds();
+            loadStocks();
+            loadStockTransactions();
+        });
+    </script>
+</body>
+</html>
